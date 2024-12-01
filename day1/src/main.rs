@@ -10,7 +10,7 @@ fn main() {
 fn part1() {
     // let cwd = env::current_dir()
     //     .expect("should have gotten the CWD");
-    let contents = fs::read_to_string("src/test.txt")
+    let contents = fs::read_to_string("src/part1.txt")
         .expect("should have read the file");
     let rows = contents.split("\n");
     let mut left:Vec<i32> = Vec::new();
