@@ -46,13 +46,13 @@ fn part1() {
 }
 
 fn part2() {
-    let contents = fs::read_to_string("src/test.txt")
+    let contents = fs::read_to_string("src/part1.txt")
         .expect("should have read the file");
     let rows = contents.split("\n");
     let mut left:Vec<i32> = Vec::new();
     let mut right:Vec<i32> = Vec::new();
     for row in rows {
-        print!("{row}\n");
+        // print!("{row}\n");
         let mut words = row.split_whitespace();
         let l = words.next().unwrap();
         let r = words.next().unwrap();
