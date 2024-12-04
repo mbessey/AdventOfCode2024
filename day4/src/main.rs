@@ -15,12 +15,50 @@ fn find_xmas(v: &Vec<Vec<char>>) -> i32 {
     for y in 0..height {
         for x in 0..width {
             let q = v[y][x];
-            if v[y][x] == 'X' {
+            if q == 'X' {
                 total += search(v, x, y, width, height);
             }
         }
     }
     return total;
+}
+
+fn find_crosses(v: &Vec<Vec<char>>) -> i32 {
+    let height = v.len();
+    let width = v[0].len();
+    println!("Width: {}, height: {}", width, height);
+    let mut total = 0;
+    for y in 1..height-1 {
+        for x in 1..width-1 {
+            let q = v[y][x];
+            if q == 'A' {
+                let how_many = search_mas(v, x, y, width, height);
+                if how_many == 2 {
+                    total += 1;
+                }
+            }
+        }
+    }
+    return total;
+}
+
+fn search_mas(v: &Vec<Vec<char>>, x:usize, y:usize, width: usize, height: usize) -> i32 {
+    println!("{}, {}", x, y);
+    let mut count = 0;
+    // can't find an "A" on the edges...
+    if v[y-1][x-1] == 'M' && v[y+1][x+1] == 'S' {
+        count += 1;
+    }
+    if v[y-1][x-1] == 'S' && v[y+1][x+1] == 'M' {
+        count += 1;
+    }
+    if v[y-1][x+1] == 'S' && v[y+1][x-1] == 'M' {
+        count += 1;
+    }
+    if v[y-1][x+1] == 'M' && v[y+1][x-1] == 'S' {
+        count += 1;
+    }
+    return count;
 }
 
 fn search(v: &Vec<Vec<char>>, x:usize, y:usize, width: usize, height: usize) -> i32 {
@@ -73,7 +111,9 @@ fn part1() {
 }
 
 fn part2() {
-
+    println!("==========\nPART TWO\n==========");
+    let values: Vec<Vec<char>> = file_as_vec2("src/sample.txt");
+    println!("{}", find_crosses(&values));
 }
 
 fn file_as_vec2(path: &str) -> Vec<Vec<char>> {
