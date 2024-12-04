@@ -1,35 +1,90 @@
 
 fn main() {
-    let values = file_as_vec2("src/test.txt");
+    let values: Vec<Vec<char>> = file_as_vec2("src/sample.txt");
     pretty_print(&values);
-    println!("{}", row_solution(&values[0]));
+    println!("{}", find_xmas(&values));
     part1();
     part2();
 }
 
-fn row_solution(values: &Vec<i32>) -> String {
-    return "42".to_string();
+fn find_xmas(v: &Vec<Vec<char>>) -> i32 {
+    let height = v.len();
+    let width = v[0].len();
+    println!("Width: {}, height: {}", width, height);
+    let mut total = 0;
+    for y in 0..height {
+        for x in 0..width {
+            let q = v[y][x];
+            if v[y][x] == 'X' {
+                total += search(v, x, y, width, height);
+            }
+        }
+    }
+    return total;
+}
+
+fn search(v: &Vec<Vec<char>>, x:usize, y:usize, width: usize, height: usize) -> i32 {
+    let mut count = 0;
+    let expected = ['X', 'M', 'A', 'S'];
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            if dx == 0 && dy == 0 {
+                continue;
+            }
+            if (dx == -1) && (x < 3) {
+                continue;
+            }
+            if (dx == 1) && (x > (width-4)) {
+                continue;
+            }
+            if (dy == -1) && (y < 3) {
+                continue;
+            }
+            if (dy == 1) && (y > (height-4)) {
+                continue;
+            }
+            let mut matched = 0;
+            let mut sx = x;
+            let mut sy = y;
+            for i in 1..4 {
+                sx = sx.checked_add_signed(dx)
+                .expect("should not overflow");
+                sy = sy.checked_add_signed(dy)
+                .expect("should not overflow");
+                let c = v[sy][sx];
+                if c != expected[i] {
+                    break;
+                } else {
+                    matched += 1;
+                }
+            }
+            if matched == 3 {
+                count += 1;
+            }
+        }
+    }
+    return count;
 }
 
 fn part1() {
-
+    println!("==========\nPART ONE\n==========");
+    let values: Vec<Vec<char>> = file_as_vec2("src/part1.txt");
+    println!("{}", find_xmas(&values));
 }
 
 fn part2() {
 
 }
 
-fn file_as_vec2(path: &str) -> Vec<Vec<i32>> {
-    let mut result:Vec<Vec<i32>> = Vec::new();
+fn file_as_vec2(path: &str) -> Vec<Vec<char>> {
+    let mut result:Vec<Vec<char>> = Vec::new();
     let contents = file_contents(path);
     let rows = contents.lines();
     for row in rows {
-        let mut row_vec:Vec<i32> = Vec::new();
-        let values = row.split_whitespace();
+        let mut row_vec:Vec<char> = Vec::new();
+        let values = row.chars();
         for value in values {
-            let v = value.parse::<i32>()
-            .expect("Failed to parse");
-            row_vec.push(v);
+            row_vec.push(value);
         }
         result.push(row_vec);
     }
@@ -42,7 +97,7 @@ fn file_contents(path: &str) -> String {
         .expect("should have read the file");
 }
 
-fn pretty_print(vec:&Vec<Vec<i32>>) {
+fn pretty_print(vec:&Vec<Vec<char>>) {
     for row in vec {
         println!("{:?}, ", row);
     }
