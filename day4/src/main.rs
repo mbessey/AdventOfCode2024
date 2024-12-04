@@ -112,7 +112,7 @@ fn part1() {
 
 fn part2() {
     println!("==========\nPART TWO\n==========");
-    let values: Vec<Vec<char>> = file_as_vec2("src/sample.txt");
+    let values: Vec<Vec<char>> = file_as_vec2("src/part1.txt");
     println!("{}", find_crosses(&values));
 }
 
