@@ -2,8 +2,8 @@ use std::{collections::HashMap, fmt, };
 
 
 fn main() {
-    sample();
-    part1();
+    // sample();
+    // part1();
     part2();
 }
 
@@ -74,21 +74,14 @@ impl Data {
         return bads;
     }
 
-    fn check_update(&self, update:&Vec<i32>) -> bool {
+    fn check_update(&self, update:&[i32]) -> bool {
+        let empty:Vec<i32> = vec![];
         for i in 1..update.len() {
             let page = update[i];
-            let before = self.before.get(&page);
-            match before {
-                None => continue,
-                Some(v) => {
-                    // Big-O from heck...
-                    for needle in v {
-                        for j in 0..i {
-                            if update[j] == *needle {
-                                return false;
-                            }
-                        }
-                    }
+            let before = self.before.get(&page).unwrap_or(&empty);
+            for needle in before {
+                if linear_search(&update[0..i], needle) != None {
+                    return false;
                 }
             }
         }
@@ -104,12 +97,35 @@ impl Data {
     }
 
     fn fix(&self, update:&Vec<i32>) -> Vec<i32> {
-        let v:Vec<i32> = Vec::new();
-        for page in update {
-
+        let mut v:Vec<i32> = update.clone();
+        let empty:Vec<i32> = vec![];
+        // possibly:
+        // 1. Order the pages that care about order, strictly?
+        // 2. Start at the last position, and move back until you're before everything you should be before?
+        // 3. Start with the original arrangement, and bubble problems forward?
+        for i in 0..v.len() {
+            for j in (i..v.len()) {
+                let current = v[i];
+                let next = v[j];
+                let before = self.before.get(&next).unwrap_or(&empty);
+                if linear_search(&before, &current) != None{
+                    let temp = v[i];
+                    v[i] = v[j];
+                    v[j] = temp;
+                }
+            }
         }
         return v;
     }
+}
+
+fn linear_search(v: &[i32], needle:&i32) -> Option<usize> {
+    for i in 0..v.len() {
+        if v[i] == *needle {
+            return Some(i);
+        }
+    }
+    return None;
 }
 
 impl fmt::Display for Data {
@@ -149,13 +165,17 @@ fn part1() {
 
 fn part2() {
     println!("PART TWO");
-    let s = file_contents("src/sample.txt");
+    let s = file_contents("src/part1.txt");
     let d = Data::new(&s);
     let bads = d.incorrect_updates();
+    let mut total = 0;
     for bad in bads {
-        let fixed = d.fix(bad);
+        let fixed = d.fix(&bad);
         println!("Fixed: {:?}", fixed);
+        println!("Middle: {}", d.middle(&fixed));
+        total += d.middle(&fixed);
     }
+    println!("TOTAL: {}", total);
 }
 
 fn file_contents(path: &str) -> String {
