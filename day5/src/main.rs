@@ -50,15 +50,20 @@ impl Data {
     }
 
     fn check_updates(&self) {
+        let mut total = 0;
         for update in &self.updates {
             if self.check_update(update) {
-                print!("pass ");
+                let mid = self.middle(update);
+                println!("pass {:?}", update);
+                println!("middle: {}", mid);
+                total += mid;
             } else {
-                print!("FAIL ");
+                println!("FAIL  {:?}", update)
             }
-            println!("{:?}", update);
         }
+        println!("TOTAL: {}", total);
     }
+
     fn check_update(&self, update:&Vec<i32>) -> bool {
         for i in 1..update.len() {
             let page = update[i];
@@ -78,6 +83,14 @@ impl Data {
             }
         }
         return true;
+    }
+
+    fn middle(&self, update:&Vec<i32>) -> i32 {
+        if update.len() % 2 ==0 {
+            panic!("What's the middle value of an even interval?");
+        }
+        let mid_index = update.len() / 2;
+        return update[mid_index];
     }
 }
 
@@ -117,26 +130,8 @@ fn part2() {
     println!("PART TWO");
 }
 
-fn file_as_vec2(path: &str) -> Vec<Vec<i32>> {
-    let mut result:Vec<Vec<i32>> = Vec::new();
-    let contents = file_contents(path);
-    let rows = contents.lines();
-    for row in rows {
-        let mut row_vec:Vec<i32> = Vec::new();
-        let values = row.split_whitespace();
-        result.push(row_vec);
-    }
-    return result;
-}
-
 fn file_contents(path: &str) -> String {
     use std::fs;
     return fs::read_to_string(path)
         .expect("should have read the file");
-}
-
-fn pretty_print(vec:&Vec<Vec<i32>>) {
-    for row in vec {
-        println!("{:?}, ", row);
-    }
 }
