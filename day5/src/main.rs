@@ -1,4 +1,4 @@
-use std::{collections::{btree_map::Values, HashMap}, fmt, iter::Map};
+use std::{collections::HashMap, fmt, };
 
 
 fn main() {
@@ -8,14 +8,14 @@ fn main() {
 }
 
 struct Data {
-    before:Vec<(i32, i32)>,
+    before:HashMap<i32, Vec<i32>>,
     updates:Vec<Vec<i32>>,
 }
 
 impl Data {
     fn new(s: &String) -> Data {
         let mut d = Data {
-            before: Vec::new(),
+            before: HashMap::new(),
             updates: Vec::new()
         };
         for line in s.lines() {
@@ -26,7 +26,15 @@ impl Data {
                     .expect("didn't parse");
                 let val = parts[1].parse::<i32>()
                     .expect("didn't parse");
-                d.before.push((key, val));
+                let v = d.before.get_mut(&key);
+                match v {
+                    Some(i) => i.push(val),
+                    None => {
+                        let mut v:Vec<i32> = Vec::new();
+                        v.push(val);
+                        d.before.insert(key, v);
+                    }
+                }
             } else if line.contains(",") {
                 // update
                 let parts = line.split(",");
@@ -40,6 +48,37 @@ impl Data {
         }
         return d;
     }
+
+    fn check_updates(&self) {
+        for update in &self.updates {
+            if self.check_update(update) {
+                print!("pass ");
+            } else {
+                print!("FAIL ");
+            }
+            println!("{:?}", update);
+        }
+    }
+    fn check_update(&self, update:&Vec<i32>) -> bool {
+        for i in 1..update.len() {
+            let page = update[i];
+            let before = self.before.get(&page);
+            match before {
+                None => continue,
+                Some(v) => {
+                    // Big-O from heck...
+                    for needle in v {
+                        for j in 0..i {
+                            if update[j] == *needle {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
 }
 
 impl fmt::Display for Data {
@@ -49,7 +88,7 @@ impl fmt::Display for Data {
         // operation succeeded or failed. Note that `write!` uses syntax which
         // is very similar to `println!`.
         for (key, value) in &self.before {
-            writeln!(f, "{} | {}", key, value)
+            writeln!(f, "{} | {:?}", key, value)
                 .expect("couldn't write");
         }
         writeln!(f)
@@ -66,7 +105,8 @@ fn sample() {
     println!("SAMPLE DATA");
     let s = file_contents("src/sample.txt");
     let d = Data::new(&s);
-    println!("{}", d);
+    // println!("{}", d);
+    d.check_updates();
 }
 
 fn part1() {
