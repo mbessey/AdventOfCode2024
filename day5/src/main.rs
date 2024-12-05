@@ -64,6 +64,16 @@ impl Data {
         println!("TOTAL: {}", total);
     }
 
+    fn incorrect_updates(&self) -> Vec<Vec<i32>> {
+        let mut bads: Vec<Vec<i32>> = Vec::new();
+        for update in &self.updates {
+            if !self.check_update(update) {
+                bads.push(update.to_vec());
+            }
+        }
+        return bads;
+    }
+
     fn check_update(&self, update:&Vec<i32>) -> bool {
         for i in 1..update.len() {
             let page = update[i];
@@ -91,6 +101,14 @@ impl Data {
         }
         let mid_index = update.len() / 2;
         return update[mid_index];
+    }
+
+    fn fix(&self, update:&Vec<i32>) -> Vec<i32> {
+        let v:Vec<i32> = Vec::new();
+        for page in update {
+
+        }
+        return v;
     }
 }
 
@@ -124,10 +142,20 @@ fn sample() {
 
 fn part1() {
     println!("PART ONE");
+    let s = file_contents("src/part1.txt");
+    let d = Data::new(&s);
+    d.check_updates();
 }
 
 fn part2() {
     println!("PART TWO");
+    let s = file_contents("src/sample.txt");
+    let d = Data::new(&s);
+    let bads = d.incorrect_updates();
+    for bad in bads {
+        let fixed = d.fix(bad);
+        println!("Fixed: {:?}", fixed);
+    }
 }
 
 fn file_contents(path: &str) -> String {
