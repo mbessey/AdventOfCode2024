@@ -1,7 +1,9 @@
+use std::thread;
+
 
 fn main() {
-    sample();
-    part1();
+    // sample();
+    // part1();
     part2();
 }
 
@@ -9,36 +11,36 @@ fn sample() {
     println!("Sample Data");
     let equations = file_as_equations("src/sample.txt");
     // pretty_print(&equations);
-    solve(&equations, true);
+    solve(&equations, true, false);
 }
 
 fn part1() {
     println!("Part 1");
     let equations = file_as_equations("src/part1.txt");
     // pretty_print(&equations);
-    solve(&equations, false);
+    solve(&equations, false, false);
 }
 
 fn part2() {
     println!("Part 2");
     let equations = file_as_equations("src/part1.txt");
     // pretty_print(&equations);
-    solve(&equations, true);
+    solve(&equations, true, false);
 }
 
-fn solve(equations: &Vec<Equation>, allow_concat:bool) {
+fn solve(equations: &Vec<Equation>, allow_concat:bool, print: bool) {
     let mut total = 0;
     for eq in equations {
         let ops = operations(&eq, allow_concat);
         if ops.len() > 0 {
-            print!("{} = {}", eq.test_value, eq.operands[0]);
+            if print { print!("{} = {}", eq.test_value, eq.operands[0]); };
             for i in 0..ops.len() {
-                print!(" {} {}", ops[i], eq.operands[i+1]);
+                if print {print!(" {} {}", ops[i], eq.operands[i+1]);}
             }
-            println!();
+            if print { println!();}
             total += eq.test_value;
         } else {
-            println!("FAIL");
+            if print {println!("FAIL");}
         }
     }
     println!("TOTAL: {}", total);    
