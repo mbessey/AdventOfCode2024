@@ -8,7 +8,8 @@ fn main() {
 fn sample() {
     println!("Sample Data");
     let equations = file_as_equations("src/sample.txt");
-    pretty_print(&equations);
+    // pretty_print(&equations);
+    let mut total = 0;
     for eq in equations {
         let ops = operations(&eq);
         if ops.len() > 0 {
@@ -16,11 +17,13 @@ fn sample() {
             for i in 0..ops.len() {
                 print!(" {} {}", ops[i], eq.operands[i+1]);
             }
-            println!()
+            println!();
+            total += eq.test_value;
         } else {
             println!("FAIL");
         }
     }
+    println!("TOTAL: {}", total);
 }
 
 fn part1() {
@@ -32,7 +35,6 @@ fn part2() {
 }
 
 fn operations(e: &Equation) -> Vec<char> {
-    let ops:Vec<char> = Vec::new();
     let test_value = e.test_value;
     let operands = &e.operands;
     let spaces = e.operands.len() - 1;
@@ -46,31 +48,32 @@ fn operations(e: &Equation) -> Vec<char> {
         }
     } else {
         // first op could be *
-        if test_value % operands[0] == 0 {
-            let e2 = Equation {
-                test_value: test_value / operands[0],
-                operands: operands[1..].to_vec()
-            };
-            let mut sub_ops = operations(&e2);
-            if sub_ops.len() > 0 {
-                let mut result = vec!['*'];
-                result.append(&mut sub_ops);
-                return result
-            }
+        let new_op = operands[0] * operands [1];
+        let mut ops = vec![new_op];
+        ops.extend(operands[2..].iter());
+        let e2 = Equation {
+            test_value: test_value,
+            operands: ops,
+        };
+        let mut sub_ops = operations(&e2);
+        if sub_ops.len() > 0 {
+            let mut result = vec!['*'];
+            result.append(&mut sub_ops);
+            return result
         }
-        // first op could be + 
-        // this is always true, yeah?
-        if test_value - operands[0] > 0 {
-            let e2 = Equation {
-                test_value: test_value / operands[0],
-                operands: operands[1..].to_vec()
-            };
-            let mut sub_ops = operations(&e2);
-            if sub_ops.len() > 0 {
-                let mut result = vec!['+'];
-                result.append(&mut sub_ops);
-                return result
-            }
+        // first op could be +
+        let new_op = operands[0] + operands [1];
+        let mut ops = vec![new_op];
+        ops.extend(operands[2..].iter());
+        let e2 = Equation {
+            test_value: test_value,
+            operands: ops
+        };
+        let mut sub_ops = operations(&e2);
+        if sub_ops.len() > 0 {
+            let mut result = vec!['+'];
+            result.append(&mut sub_ops);
+            return result
         }
     }
     return vec![];
