@@ -1,7 +1,7 @@
 
 fn main() {
     sample();
-    // part1();
+    part1();
     // part2();
 }
 
@@ -9,6 +9,21 @@ fn sample() {
     println!("Sample Data");
     let equations = file_as_equations("src/sample.txt");
     // pretty_print(&equations);
+    solve(&equations);
+}
+
+fn part1() {
+    println!("Part 1");
+    let equations = file_as_equations("src/part1.txt");
+    // pretty_print(&equations);
+    solve(&equations);
+}
+
+fn part2() {
+    println!("Part 2");
+}
+
+fn solve(equations: &Vec<Equation>) {
     let mut total = 0;
     for eq in equations {
         let ops = operations(&eq);
@@ -23,15 +38,7 @@ fn sample() {
             println!("FAIL");
         }
     }
-    println!("TOTAL: {}", total);
-}
-
-fn part1() {
-    println!("Part 1");
-}
-
-fn part2() {
-    println!("Part 2");
+    println!("TOTAL: {}", total);    
 }
 
 fn operations(e: &Equation) -> Vec<char> {
