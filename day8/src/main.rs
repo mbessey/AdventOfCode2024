@@ -1,14 +1,13 @@
 
 fn main() {
-    let values = file_as_vec2("src/test.txt");
-    pretty_print(&values);
-    println!("{}", row_solution(&values[0]));
+    sample();
     part1();
     part2();
 }
 
-fn row_solution(values: &Vec<i32>) -> String {
-    return "42".to_string();
+fn sample() {
+    let values = file_as_vec2("src/sample.txt");
+    pretty_print(&values);
 }
 
 fn part1() {
