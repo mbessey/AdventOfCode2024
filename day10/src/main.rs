@@ -33,7 +33,18 @@ fn sample() {
 
 fn part1() {
     println!("PART ONE: ");
-
+    let map = file_as_map("src/part1.txt");
+    //pretty_print(&map);
+    let heads = find_trailheads(&map);
+    //println!("{:?}", heads);
+    let mut sum_scores = 0;
+    for head in heads {
+        println!("For trailhead: {:?}", head);
+        let summits = summits_from_head(&map, &head);
+        println!("{} summits", summits.len());
+        sum_scores += summits.len();
+    }
+    println!("Total score: {}", sum_scores);
 }
 
 fn part2() {
