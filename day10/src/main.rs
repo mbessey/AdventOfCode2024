@@ -22,13 +22,17 @@ fn sample() {
     let heads = find_trailheads(&map);
     //println!("{:?}", heads);
     let mut sum_scores = 0;
+    let mut sum_ranks = 0;
     for head in heads {
         println!("For trailhead: {:?}", head);
         let summits = summits_from_head(&map, &head);
-        println!("{} summits: {:?}", summits.len(), summits);
+        let rank = rank_head(&map, &head);
+        println!("{} summits, rank: {}", summits.len(), rank);
         sum_scores += summits.len();
+        sum_ranks += rank;
     }
     println!("Total score: {}", sum_scores);
+    println!("Total ranks: {}", sum_ranks);
 }
 
 fn part1() {
@@ -49,7 +53,18 @@ fn part1() {
 
 fn part2() {
     println!("PART TWO: ");
-
+    let map = file_as_map("src/part1.txt");
+    //pretty_print(&map);
+    let heads = find_trailheads(&map);
+    //println!("{:?}", heads);
+    let mut sum_ranks = 0;
+    for head in heads {
+        println!("For trailhead: {:?}", head);
+        let rank = rank_head(&map, &head);
+        println!("rank: {}", rank);
+        sum_ranks += rank;
+    }
+    println!("Total ranks: {}", sum_ranks);
 }
 
 fn summits_from_head(map: &Map, coords: &Coord) -> HashSet<Coord> {
@@ -74,6 +89,28 @@ fn summits_from_head(map: &Map, coords: &Coord) -> HashSet<Coord> {
         }
     }
     return summits;
+}
+
+fn rank_head(map: &Map, coords: &Coord) -> i32 {
+    let height = map.len();
+    let width = map[0].len();
+    let mut rank = 0;
+    let elevation = map[coords.row][coords.col];
+    if elevation == 9 {
+        // we've reached the summit. that's one peak
+        // println!("Summit at: {:?}", coords);
+        rank = 1;
+    } else {
+        // Where can we go from here?
+        let neighbors = neighbors(&coords, height, width);
+        for neighbor in neighbors {
+            // only go uphill by one
+            if map[neighbor.row][neighbor.col] == elevation + 1 {
+                rank += rank_head(map, &neighbor);
+            }
+        }
+    }
+    return rank;
 }
 
 fn neighbors(coords: &Coord, height: usize, width: usize) -> Vec<Coord>{
