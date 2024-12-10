@@ -1,5 +1,7 @@
+use std::collections::HashSet;
 
-#[derive(Debug)]
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct Coord {
     row: usize,
     col: usize
@@ -18,10 +20,13 @@ fn sample() {
     let map = file_as_map("src/sample.txt");
     pretty_print(&map);
     let heads = find_trailheads(&map);
-    println!("{:?}", heads);
+    //println!("{:?}", heads);
     let mut sum_scores = 0;
     for head in heads {
-        sum_scores += score_head(&map, &head);
+        println!("For trailhead: {:?}", head);
+        let summits = summits_from_head(&map, &head);
+        println!("{} summits: {:?}", summits.len(), summits);
+        sum_scores += summits.len();
     }
     println!("Total score: {}", sum_scores);
 }
@@ -36,42 +41,36 @@ fn part2() {
 
 }
 
-fn score_head(map: &Map, coords: &Coord) -> i32 {
+fn summits_from_head(map: &Map, coords: &Coord) -> HashSet<Coord> {
     let height = map.len();
     let width = map[0].len();
-    let mut score = 0;
+    let mut summits = HashSet::new();
     let elevation = map[coords.row][coords.col];
     if elevation == 9 {
         // we've reached the summit. that's one peak
-        println!("Summit at: {:?}", coords);
-        score = 1;
+        summits.insert(coords.clone());
     } else {
         // Where can we go from here?
         let neighbors = neighbors(&coords, height, width);
         for neighbor in neighbors {
             // only go uphill by one
             if map[neighbor.row][neighbor.col] == elevation + 1 {
-                score += score_head(map, &neighbor);
+                let other = summits_from_head(map, &neighbor);
+                for summit in other {
+                    summits.insert(summit.clone());
+                }
             }
         }
     }
-    return score;
+    return summits;
 }
 
 fn neighbors(coords: &Coord, height: usize, width: usize) -> Vec<Coord>{
     let mut neighbors = vec![];
-    let min_row = coords.row.saturating_sub(1);
-    let min_col = coords.col.saturating_sub(1);
-    let max_row = if coords.row == height-1 {coords.row} else {coords.row+1};
-    let max_col = if coords.col == width-1 {coords.col} else {coords.col+1};
-    for r in min_row..=max_row {
-        for c in min_col..=max_col {
-            if r == coords.row && c == coords.col {
-                continue;
-            }
-            neighbors.push(Coord { row: r, col: c });
-        }
-    }
+    if coords.row > 0 { neighbors.push(Coord { row: coords.row-1, col: coords.col }); }
+    if coords.row < height-1 { neighbors.push(Coord { row: coords.row+1, col: coords.col }); }
+    if coords.col > 0 { neighbors.push(Coord { row: coords.row, col: coords.col - 1}); }
+    if coords.col < width-1 { neighbors.push(Coord { row: coords.row, col: coords.col + 1}); }
     return neighbors;
 }
 
