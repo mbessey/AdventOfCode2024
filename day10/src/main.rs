@@ -51,7 +51,7 @@ fn score_head(map: &Map, coords: &Coord) -> i32 {
         for neighbor in neighbors {
             // only go uphill by one
             if map[neighbor.row][neighbor.col] == elevation + 1 {
-                score += score_head(map, coords);
+                score += score_head(map, &neighbor);
             }
         }
     }
