@@ -1,29 +1,34 @@
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
 
 fn main() {
     sample();
-    part1();
-    part2();
+    // part1();
+    // part2();
 }
+
+type Stones = HashMap<i64, i64>;
 
 fn sample() {
     println!("Sample: ");
-    let mut stones = file_as_vec("src/sample.txt");
+    let mut stones = file_as_stones("src/sample.txt");
     println!("{:?}", stones);
     for _i in 0 ..6 {
         stones = evolve_stones(stones);
         println!("{:?}", stones);
     }
-    let mut stones = file_as_vec("src/sample.txt");
-    for i in 0..25 {
+    let total = totalize(&stones);
+    println!("After 6 blinks, {} stones", total);
+    let mut stones = file_as_stones("src/sample.txt");
+    for _i in 0..25 {
         stones = evolve_stones(stones);
     }
-    println!("After 25 blinks, {} stones", stones.len());
+    let total = totalize(&stones);
+    println!("After 25 blinks, {} stones", total);
 }
 
 fn part1() {
     println!("PART ONE: ");
-    let mut stones = file_as_vec("src/part1.txt");
+    let mut stones = file_as_stones("src/part1.txt");
     println!("{:?}", stones);
     for i in 0..25 {
         stones = evolve_stones(stones);
@@ -33,40 +38,67 @@ fn part1() {
 
 fn part2() {
     println!("PART TWO: ");
-    let mut stones = file_as_vec("src/part1.txt");
+    let mut stones = file_as_stones("src/sample.txt");
     println!("{:?}", stones);
-    for i in 0..75 {
-        println!("{}: {}", i, stones.len());
-        stones = evolve_stones(stones);
+    for stone in stones.keys() {
+        let babies = blink(*stone, 75);
     }
     println!("After 75 blinks, {} stones", stones.len());
 }
 
-fn evolve_stones(stones: Vec<i64>) -> Vec<i64> {
-    let mut result = Vec::new();
-    for stone in stones {
+fn blink(stone: i64, num_blinks: i64) -> Stones {
+    let mut stone = stone;
+    let mut result = Stones::new();
+    for _blink in 0..num_blinks {
         let digits = format!("{}", stone);
         let digits_len = digits.len();
         if stone == 0 {
-            result.push(1);
+            stone = 1;
         } else if digits_len % 2 == 0 {
-            let top = digits[0..digits_len/2].parse::<i64>().unwrap();
+            stone = digits[0..digits_len/2].parse::<i64>().unwrap();
             let bottom = digits[digits_len/2..].parse::<i64>().unwrap();
-            result.push(top);
-            result.push(bottom);
+            *result.entry(bottom).or_insert(0) += 1;
         } else {
-            result.push(stone * 2024);
+            stone = stone * 2024;
         }
     }
     return result;
 }
 
-fn file_as_vec(path: &str) -> Vec<i64> {
-    let mut result = Vec::new();
+fn evolve_stones(stones: Stones) -> Stones {
+    let mut result = Stones::new();
+    for (stone, count) in stones {
+        let digits = format!("{}", stone);
+        let digits_len = digits.len();
+        if stone == 0 {
+            *result.entry(1).or_insert(0) += count;
+        } else if digits_len % 2 == 0 {
+            let top = digits[0..digits_len/2].parse::<i64>().unwrap();
+            let bottom = digits[digits_len/2..].parse::<i64>().unwrap();
+            *result.entry(top).or_insert(0) += count;
+            *result.entry(bottom).or_insert(0) += count;
+        } else {
+            *result.entry(stone * 2024).or_insert(0) += count;
+        }
+    }
+    return result;
+}
+
+fn totalize(stones: &Stones) -> i64 {
+    let mut total = 0;
+    for (_stone, count) in stones {
+        total += count;
+    }
+    return total;
+}
+
+fn file_as_stones(path: &str) -> Stones {
+    let mut result = Stones::new();
     let contents = file_contents(path);
     let strings = contents.trim().split_whitespace();
     for s in strings {
-        result.push(s.parse::<i64>().expect("parse error"));
+        let v =s.parse::<i64>().expect("parse error"); 
+        result.insert(v, 1i64);
     }
     return result;
 }
