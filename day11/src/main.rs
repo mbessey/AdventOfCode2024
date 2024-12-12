@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 fn main() {
     sample();
-    // part1();
-    // part2();
+    part1();
+    part2();
 }
 
 type Stones = HashMap<i64, i64>;
@@ -14,7 +14,7 @@ fn sample() {
     println!("{:?}", stones);
     for _i in 0 ..6 {
         stones = evolve_stones(stones);
-        println!("{:?}", stones);
+        // println!("{:?}", stones);
     }
     let total = totalize(&stones);
     println!("After 6 blinks, {} stones", total);
@@ -33,17 +33,19 @@ fn part1() {
     for i in 0..25 {
         stones = evolve_stones(stones);
     }
-    println!("After 25 blinks, {} stones", stones.len());
+    let total = totalize(&stones);
+    println!("After 25 blinks, {} stones", total);
 }
 
 fn part2() {
     println!("PART TWO: ");
-    let mut stones = file_as_stones("src/sample.txt");
-    println!("{:?}", stones);
-    for stone in stones.keys() {
-        let babies = blink(*stone, 75);
+    let mut stones = file_as_stones("src/part1.txt");
+    // println!("{:?}", stones);
+    for i in 0..75 {
+        stones = evolve_stones(stones);
     }
-    println!("After 75 blinks, {} stones", stones.len());
+    let total = totalize(&stones);
+    println!("After 25 blinks, {} stones", total);
 }
 
 fn blink(stone: i64, num_blinks: i64) -> Stones {
