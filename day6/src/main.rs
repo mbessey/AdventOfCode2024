@@ -1,6 +1,8 @@
+use std::collections::HashSet;
+
 
 fn main() {
-    // sample();
+    sample();
     part1();
     part2();
 }
@@ -11,6 +13,12 @@ enum Direction {
     Right,
     Down,
     Left
+}
+
+#[derive(Debug, Hash, PartialEq, Eq)]
+struct Coord {
+    row: usize,
+    col: usize
 }
 
 impl Direction {
@@ -37,40 +45,66 @@ fn sample() {
     let mut values = file_as_vec2("src/sample.txt");
     println!("Rows: {}\tColumns: {}", values.len(), values[0].len());
     pretty_print(&values);
-    let (row, col) = find_start(&values);
-    println!("Start: ({}, {})", row, col);
+    let start = find_start(&values);
+    println!("Start: ({}, {})", start.row, start.col);
     let mut facing = Direction::Up;
     let visited = navigate_out(&mut values);
     pretty_print(&values);
-    println!("Unique locations visited: {}", &visited);
+    println!("Unique locations visited: {}", visited.len());
 }
 
 fn part1() {
+    println!("PART ONE:");
     let mut values = file_as_vec2("src/part1.txt");
     println!("Rows: {}\tColumns: {}", values.len(), values[0].len());
     // pretty_print(&values);
-    let (row, col) = find_start(&values);
-    println!("Start: ({}, {})", row, col);
-    let mut facing = Direction::Up;
+    let start = find_start(&values);
+    println!("Start: ({}, {})", start.row, start.col);
     let visited = navigate_out(&mut values);
-    println!("Unique locations visited: {}", &visited);
-    // pretty_print(&values);
+    println!("Unique locations visited: {}", visited.len());
 }
 
 fn part2() {
-
+    println!("PART TWO:");
+    let map = file_as_vec2("src/part1.txt");
+    println!("Rows: {}\tColumns: {}", map.len(), map[0].len());
+    // pretty_print(&values);
+    let start = find_start(&map);
+    println!("Start: ({}, {})", start.row, start.col);
+    let mut scratch_map = map.clone();
+    let visited = navigate_out(&mut scratch_map);
+    let visited_count = visited.len();
+    println!("Unique locations visited: {}", visited_count);
+    for coord in visited {
+        if coord == start {
+            continue;
+        }
+        let mut new_map = map.clone();
+        let obstacle_row = coord.row;
+        let obstacle_col = coord.col;
+        new_map[obstacle_row][obstacle_col] = 'O';
+        // pretty_print(&new_map);
+        let visited = navigate_out(&mut new_map).len();
+        if visited != visited_count {
+            println!("Count: {}", visited);
+        }
+    }
 }
 
-fn navigate_out(v: &mut Vec<Vec<char>>) -> i32 {
-    let mut count = 1;
+fn navigate_out(v: &mut Vec<Vec<char>>) -> Vec<Coord> {
+    let mut steps = 0;
+    let mut visited = Vec::new();
     let mut row:usize;
     let mut col:usize;
     let max_row = v.len()-1;
     let max_col = v.len()-1;
-    (row, col) = find_start(v);
+    let start = find_start(v);
+    row = start.row;
+    col = start.col;
     let mut facing = Direction::Up;
     let (mut row_dir, mut col_dir) = facing.row_col_dir();
     loop {
+        steps += 1;
         // footprint
         v[row][col] = 'X';
         if col == 0 && col_dir == -1 {
@@ -92,31 +126,35 @@ fn navigate_out(v: &mut Vec<Vec<char>>) -> i32 {
             '.' => {
                 row = new_row;
                 col = new_col;
-                count += 1;
+                visited.push(Coord { row: row, col: col });
             },
             'X' => {
                 row = new_row;
                 col = new_col;
             }
-            '#' => {
+            '#' | 'O' => {
                 facing.turn_right();
                 (row_dir, col_dir) = facing.row_col_dir();
             }
             _ => () // do nothing
         }
+        if steps > max_col * max_row * 5 {
+            println!("Loop!");
+            break;
+        }
     }
-    return count;
+    return visited;
 }
 
-fn find_start(v: &Vec<Vec<char>>) -> (usize, usize) {
+fn find_start(v: &Vec<Vec<char>>) -> Coord {
     for row in 0..v.len() {
         for col in 0..v[row].len() {
             if v[row][col] == '^' {
-                return (row,col)
+                return Coord {row: row, col: col}
             }
         }
     }
-    return (999,999)
+    return Coord{ row: 999, col: 999}
 }
 
 fn file_as_vec2(path: &str) -> Vec<Vec<char>> {
