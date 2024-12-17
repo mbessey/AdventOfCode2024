@@ -1,10 +1,12 @@
-use std::{collections::HashMap};
+use std::cmp::min;
+
 use regex::Regex;
 
+type Number = i64;
 #[derive(Debug)]
 struct Coord {
-    x: i32,
-    y: i32
+    x: Number,
+    y: Number
 }
 
 #[derive(Debug)]
@@ -16,8 +18,8 @@ struct Game {
 
 #[derive(Debug)]
 struct Solution {
-    a_presses: i32,
-    b_presses: i32,
+    a_presses: Number,
+    b_presses: Number,
 }
 
 impl Game {
@@ -30,8 +32,8 @@ impl Game {
     }
 }
 fn main() {
-    sample();
-    part1();
+    // sample();
+    // part1();
     part2();
 }
 
@@ -59,18 +61,62 @@ fn sample() {
 
 fn part1() {
     println!("PART ONE: ");
-
+    let games = file_as_games("src/part1.txt");
+    let mut total = 0;
+    for game in games {
+        // println!("{:?}", game);
+        let solutions = solve_game(game);
+        // println!("Solutions: {:?}", solutions);
+        let lowest = lowest_cost(solutions);
+        match lowest {
+            Some(x) => {
+                println!("Lowest cost: {}", x);
+                total += x;
+            },
+            None => {
+                println!("No solution");
+            }
+        }
+    }
+    println!("Total Cost: {}", total);
 }
 
 fn part2() {
     println!("PART TWO: ");
+    let mut games = file_as_games("src/sample.txt");
+    adjust_prizes(& mut games);
+    let mut total = 0;
+    for game in games {
+        // println!("{:?}", game);
+        let solutions = solve_game(game);
+        // println!("Solutions: {:?}", solutions);
+        let lowest = lowest_cost(solutions);
+        match lowest {
+            Some(x) => {
+                println!("Lowest cost: {}", x);
+                total += x;
+            },
+            None => {
+                println!("No solution");
+            }
+        }
+    }
+    println!("Total Cost: {}", total);
+}
 
+fn adjust_prizes(games: & mut Vec<Game>) {
+    for game in games {
+        game.prize.x += 10000000000000;
+        game.prize.y += 10000000000000;
+    }
 }
 
 fn solve_game(game: Game) -> Vec<Solution> {
     let mut result = Vec::new();
-    for a in 0..100 {
-        for b in 0..100 {
+    let a_limit = min(game.prize.x / game.a.x, game.prize.y/game.a.y);
+    let b_limit = min(game.prize.x / game.b.x, game.prize.y/game.b.y);
+    for a in 0..a_limit {
+        for b in 0..b_limit {
             let x = a * game.a.x + b * game.b.x;
             let y = a * game.a.y + b * game.b.y;
             if x == game.prize.x && y == game.prize.y {
@@ -81,7 +127,7 @@ fn solve_game(game: Game) -> Vec<Solution> {
     return result;
 }
 
-fn lowest_cost(solutions: Vec<Solution>) -> Option<i32> {
+fn lowest_cost(solutions: Vec<Solution>) -> Option<Number> {
     if solutions.len() == 0 {
         return None
     }
@@ -93,7 +139,7 @@ fn lowest_cost(solutions: Vec<Solution>) -> Option<i32> {
     return Some(lowest)
 }
 
-fn cost(solution: &Solution) -> i32 {
+fn cost(solution: &Solution) -> Number {
     solution.a_presses * 3 + solution.b_presses
 }
 
@@ -104,9 +150,9 @@ fn file_as_games(path: &str) -> Vec<Game> {
     .expect("Regex error");
     let mut game = Game::new();
     for capture in line_re.captures_iter(&contents) {
-        let x = capture[2].parse::<i32>()
+        let x = capture[2].parse::<Number>()
         .expect("can't parse X");
-        let y = capture[3].parse::<i32>()
+        let y = capture[3].parse::<Number>()
         .expect("can't parse X");
         match &capture[1] {
             "Button A" => {

@@ -1,80 +1,110 @@
-use std::{collections::HashMap};
+use std::{collections::{HashMap, HashSet}, hash::Hash};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 struct Coord {
     row: i32,
     col: i32
 }
 
+#[derive(Debug)]
+struct Map {
+    antennae: HashMap<char, Vec<Coord>>,
+    width: usize,
+    height: usize
+}
+
 fn main() {
-    sample();
+    // sample();
     part1();
     part2();
 }
 
 fn sample() {
-    let values = file_as_vec2("src/sample.txt");
-    let height = values.len() as i32;
-    let width = values[0].len() as i32;
-    //pretty_print(&values);
-    let antennas = get_antennas(&values);
-    print_antennas(&antennas);
-    let nodes = get_nodes(&antennas, width, height);
-    println!("Nodes: {:?}", nodes);
+    let map = file_as_map("src/sample.txt");
+    println!("{:?}", &map);
+    let nodes = get_nodes(&map);
+    println!("{} Nodes: {:?}", nodes.len(), nodes)
 }
 
 fn part1() {
-
+    let map = file_as_map("src/part1.txt");
+    println!("Width: {}, Height: {}, antennae: {}", &map.width, &map.height, &map.antennae.len());
+    let nodes = get_nodes(&map);
+    println!("{} Nodes: {:?}", nodes.len(), nodes)
 }
 
 fn part2() {
 
 }
 
-fn get_nodes(map: &HashMap<char, Vec<Coord>>, width:i32, height: i32) -> Vec<Coord> {
-    let mut nodes = Vec::new();
-    for (freq, coords) in map {
-        print
-    }
-    return nodes;
-}
+/*
 
-fn print_antennas(map: &HashMap<char, Vec<Coord>>) {
-    for key in map.keys() {
-        println!("{}: {:?}", key, map.get(key).unwrap());
-    }
-}
+    a: 1, 8
+    b: 2, 5
 
-fn get_antennas(v: &Vec<Vec<char>>) -> HashMap<char, Vec<Coord>> {
-    let mut h = HashMap::new();
-    for row in 0..v.len() {
-        let row_vec = &v[row];
-        for col in 0..row_vec.len() {
-            let ch = row_vec[col];
-            if ch != '.' {
-                if h.contains_key(&ch) {
-                    let v2:&mut Vec<Coord> = h.get_mut(&ch).unwrap();
-                    v2.push(Coord {row: row as i32, col: col as i32});
-                } else {
-                    h.insert(ch, vec![Coord {row: row as i32, col: col as i32}]);
-                }
+    col_delta = 3
+    row_delta = -1
+ */
+
+fn get_nodes(map: &Map) -> HashSet<Coord> {
+    let mut result = HashSet::new();
+    for (freq, antennae) in &map.antennae {
+        println!("Frequency {}: {} antennae", freq, antennae.len());
+        for (a,b) in pairwise(antennae) {
+            let col_delta = a.col - b.col;
+            let row_delta = a.row - b.row;
+            let c = Coord {
+                row: b.row - row_delta,
+                col: b.col - col_delta
+            };
+            let d = Coord {
+                row: a.row + row_delta,
+                col: a.col + col_delta
+            };
+            if (c.row < map.height as i32 && c.row >= 0) && (c.col < map.width as i32 && c.col >= 0) {
+                result.insert(c);
+            }
+            if (d.row < map.height as i32 && d.row >= 0) && (d.col < map.width as i32 && d.col >= 0) {
+                result.insert(d);
             }
         }
     }
-    return h;
+    return result;
 }
 
-fn file_as_vec2(path: &str) -> Vec<Vec<char>> {
-    let mut result = Vec::new();
+fn pairwise(vec: &Vec<Coord>) -> Vec<(&Coord, &Coord)> {
+    let mut pairs = Vec::new();
+    for i in 0..vec.len() {
+        for j in i+1..vec.len() {
+            pairs.push((&vec[i], &vec[j]));
+        }    
+    }
+    return pairs;
+}
+
+fn file_as_map(path: &str) -> Map {
     let contents = file_contents(path);
-    let rows = contents.lines();
-    for row in rows {
-        let mut row_vec:Vec<char> = Vec::new();
-        let values = row.chars();
-        for value in values {
-            row_vec.push(value);
+    let mut rows = contents.lines();
+    let mut result = Map {
+        height: rows.clone().count(),
+        width: rows.next().unwrap().len(),
+        antennae: HashMap::new()
+    };
+    let mut rows = contents.lines();
+    for row in 0..result.height {
+        let line = rows.next().unwrap();
+        let mut chars = line.chars();
+        for col in 0..line.len() {
+            let ch = chars.next().unwrap();
+            if ch != '.' {
+                if result.antennae.contains_key(&ch) {
+                    let v2:&mut Vec<Coord> = result.antennae.get_mut(&ch).unwrap();
+                    v2.push(Coord {row: row as i32, col: col as i32});
+                } else {
+                    result.antennae.insert(ch, vec![Coord {row: row as i32, col: col as i32}]);
+                }
+            }
         }
-        result.push(row_vec);
     }
     return result;
 }
