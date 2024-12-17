@@ -9,8 +9,10 @@ struct Program {
     reg_b: Number,
     reg_c: Number,
     ip: usize,
+    halted: bool,
     instructions: Vec<Number>,
-    output: Vec<Number>
+    output: Vec<Number>,
+    check_output: bool
 }
 
 fn main() {
@@ -23,9 +25,8 @@ fn sample() {
     println!("Sample: ");
     let mut program_state = file_as_program("src/sample.txt");
     println!("Program state: {:?}", program_state);
-    let mut halted = false;
-    while ! halted {
-        halted = step(&mut program_state);
+    while ! program_state.halted {
+        step(&mut program_state);
         println!("Program state: {:?}", program_state);
     }
     println!("Halted.");
@@ -43,10 +44,11 @@ fn part1() {
 
 fn part2() {
     println!("PART TWO: ");
-    let program_state = file_as_program("src/sample2.txt");
-    let mut start_a = 0;
+    let program_state = file_as_program("src/part1.txt");
+    let mut start_a = 2381000000;
     loop {
         let mut state = program_state.clone();
+        state.check_output = true;
         state.reg_a = start_a;
         if start_a % 1000000 == 0 {
             println!("reg_a == {}", state.reg_a);
@@ -61,15 +63,13 @@ fn part2() {
 }
 
 fn run(program: &mut Program) {
-    let mut halted = false;
-    while ! halted {
-        halted = step(program);
+    while ! program.halted {
+        step(program);
         // println!("Program state: {:?}", program_state);
     }
 }
 
-fn step(program: &mut Program) -> bool {
-    let mut halted = false;
+fn step(program: &mut Program) {
     let instruction = program.instructions[program.ip];
     program.ip += 1;
     match instruction {
@@ -77,7 +77,7 @@ fn step(program: &mut Program) -> bool {
         1 => { bxl(program) }, // bitwise xor literal B|L => B
         2 => { bst(program) }, // mod 8 combo%8 => B
         3 => { jnz(program) }, // jump if non-zero
-        4 => { bxc(program) }, // bitwise XOR b|c
+        4 => { bxc(program) }, // bitwise XOR b|c => B
         5 => { out(program) }, // output
         6 => { bdv(program) }, // divide A / 2^combo => B
         7 => { cdv(program) }, // divide A / 2^combo => C
@@ -86,9 +86,8 @@ fn step(program: &mut Program) -> bool {
         }
     }
     if program.ip >= program.instructions.len() {
-        halted = true;
+        program.halted = true;
     }
-    return halted
 }
 
 fn adv(prog: &mut Program) {
@@ -123,7 +122,13 @@ fn bxc(prog: &mut Program) {
 
 fn out(prog: &mut Program) {
     let c = combo_operand(prog);
-    prog.output.push(c % 8);
+    let v = c % 8;
+    prog.output.push(v);
+    if prog.check_output {
+        if v != prog.instructions[prog.output.len()-1] {
+            prog.halted = true;
+        }
+    }
 }
 
 fn bdv(prog: &mut Program) {
@@ -167,8 +172,10 @@ fn file_as_program(path: &str) -> Program {
         reg_b: 0,
         reg_c: 0,
         ip: 0,
+        halted: false,
         instructions: Vec::new(),
-        output: Vec::new()
+        output: Vec::new(),
+        check_output: false
     };
     for line in contents.lines() {
         if let Some(register) = reg_re.captures(line) {
