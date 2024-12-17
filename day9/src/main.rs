@@ -1,4 +1,4 @@
-use std::path::MAIN_SEPARATOR;
+use std::{path::MAIN_SEPARATOR, sync::LockResult};
 
 
 type Number = i64;
@@ -32,7 +32,12 @@ fn part1() {
 
 fn part2() {
     println!("PART TWO: ");
-
+    let mut map = file_as_map("src/part1.txt");
+    println!("Map length: {}", map.len());
+    // pretty_print(&map);
+    compact2(&mut map);
+    // pretty_print(&map);
+    println!("Checksum: {}", checksum(&map));
 }
 
 fn checksum(map: &Map) -> Number {
@@ -61,6 +66,75 @@ fn compact(map: &mut Map) {
         if map[left] != None {
             left += 1;
         }
+    }
+}
+
+fn compact2(map: &mut Map) {
+    // Find highest-numbered file
+    // Find leftmost empty space it could fit
+    // Move file
+    // Rduce fileID
+    let mut file_id = max_file(&map);
+    while file_id > 0 {
+        let (file_location, size) = find_file(&map, file_id);
+        let hole_location = find_hole(&map, size);
+        if hole_location != None {
+            let hole = hole_location.unwrap();
+            if hole < file_location {
+                move_file(map, file_location, hole_location.unwrap(), size);
+            }
+        }
+        file_id -= 1;
+    }
+}
+
+fn max_file(map: &Map) -> Number {
+    let mut max = 0;
+    for i in 0..map.len() {
+        if map[i] > Some(max) {
+            max = map[i]
+            .expect("Map subscript failed")
+        }
+    }
+    return max;
+}
+
+fn find_file(map: &Map, file_id: Number) -> (usize, usize) {
+    let mut size = 0;
+    let mut location = 0;
+    for i in (0..map.len()).rev() {
+        if map[i] == Some(file_id) {
+            location = i;
+            size += 1;
+        }
+    }
+    return (location, size)
+}
+
+fn find_hole(map: &Map, size: usize) -> Option<usize> {
+    let mut location = None;
+    let mut hole_size = 0;
+    for i in 0..map.len() {
+        if map[i] == None {
+            hole_size += 1;
+            if location == None {
+                location = Some(i);
+            }
+            if hole_size == size {
+                return location
+            }
+        } else {
+            location = None;
+            hole_size = 0;
+        } 
+    }
+    return None;
+}
+
+fn move_file(map: &mut Map, file_location: usize, hole_location: usize, size: usize) {
+    for i in 0..size {
+        map[hole_location+i] = map[file_location+i];
+        map[file_location+i] = None;
     }
 }
 
