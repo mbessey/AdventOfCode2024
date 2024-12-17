@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, hash::Hash};
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 struct Coord {
     row: i32,
     col: i32
@@ -30,11 +30,14 @@ fn part1() {
     let map = file_as_map("src/part1.txt");
     println!("Width: {}, Height: {}, antennae: {}", &map.width, &map.height, &map.antennae.len());
     let nodes = get_nodes(&map);
-    println!("{} Nodes: {:?}", nodes.len(), nodes)
+    println!("{} Nodes", nodes.len())
 }
 
 fn part2() {
-
+    let map = file_as_map("src/part1.txt");
+    println!("Width: {}, Height: {}, antennae: {}", &map.width, &map.height, &map.antennae.len());
+    let nodes = get_nodes2(&map);
+    println!("{} Nodes", nodes.len())
 }
 
 /*
@@ -47,7 +50,7 @@ fn part2() {
  */
 
 fn get_nodes(map: &Map) -> HashSet<Coord> {
-    let mut result = HashSet::new();
+    let mut result: HashSet<Coord> = HashSet::new();
     for (freq, antennae) in &map.antennae {
         println!("Frequency {}: {} antennae", freq, antennae.len());
         for (a,b) in pairwise(antennae) {
@@ -66,6 +69,38 @@ fn get_nodes(map: &Map) -> HashSet<Coord> {
             }
             if (d.row < map.height as i32 && d.row >= 0) && (d.col < map.width as i32 && d.col >= 0) {
                 result.insert(d);
+            }
+        }
+    }
+    return result;
+}
+
+fn get_nodes2(map: &Map) -> HashSet<Coord> {
+    let mut result: HashSet<Coord> = HashSet::new();
+    for (freq, antennae) in &map.antennae {
+        println!("Frequency {}: {} antennae", freq, antennae.len());
+        for (a,b) in pairwise(antennae) {
+            result.insert(*a);
+            result.insert(*b);            
+            let col_delta = a.col - b.col;
+            let row_delta = a.row - b.row;
+            for m in 1..50 {
+                let c = Coord {
+                    row: b.row - row_delta * m,
+                    col: b.col - col_delta * m
+                };
+                if (c.row < map.height as i32 && c.row >= 0) && (c.col < map.width as i32 && c.col >= 0) {
+                    result.insert(c);
+                }
+            }
+            for m in 1..50 {
+                let d = Coord {
+                    row: a.row + row_delta * m,
+                    col: a.col + col_delta * m
+                };
+                if (d.row < map.height as i32 && d.row >= 0) && (d.col < map.width as i32 && d.col >= 0) {
+                    result.insert(d);
+                }
             }
         }
     }
