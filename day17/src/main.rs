@@ -3,13 +3,14 @@ use std::cmp::min;
 use regex::Regex;
 
 type Number = i64;
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Program {
     reg_a: Number,
     reg_b: Number,
     reg_c: Number,
     ip: usize,
-    instructions: Vec<Number>
+    instructions: Vec<Number>,
+    output: Vec<Number>
 }
 
 fn main() {
@@ -34,16 +35,37 @@ fn part1() {
     println!("PART ONE: ");
     let mut program_state = file_as_program("src/part1.txt");
     println!("Program state: {:?}", program_state);
-    let mut halted = false;
-    while ! halted {
-        halted = step(&mut program_state);
-        // println!("Program state: {:?}", program_state);
-    }
+    run(&mut program_state);
     println!("Halted.");
+    let output_strings:Vec<String> = program_state.output.iter().map(|x|format!("{}", x)).collect();
+    println!("{}", output_strings.join(","));
 }
 
 fn part2() {
     println!("PART TWO: ");
+    let program_state = file_as_program("src/sample2.txt");
+    let mut start_a = 0;
+    loop {
+        let mut state = program_state.clone();
+        state.reg_a = start_a;
+        if start_a % 1000000 == 0 {
+            println!("reg_a == {}", state.reg_a);
+        }
+        run(&mut state);
+        if state.output == state.instructions {
+            println!("Output matched with a = {}", start_a);
+            break;
+        }
+        start_a += 1;
+    }
+}
+
+fn run(program: &mut Program) {
+    let mut halted = false;
+    while ! halted {
+        halted = step(program);
+        // println!("Program state: {:?}", program_state);
+    }
 }
 
 fn step(program: &mut Program) -> bool {
@@ -101,7 +123,7 @@ fn bxc(prog: &mut Program) {
 
 fn out(prog: &mut Program) {
     let c = combo_operand(prog);
-    print!("{},", c % 8);
+    prog.output.push(c % 8);
 }
 
 fn bdv(prog: &mut Program) {
@@ -145,7 +167,8 @@ fn file_as_program(path: &str) -> Program {
         reg_b: 0,
         reg_c: 0,
         ip: 0,
-        instructions: Vec::new(),        
+        instructions: Vec::new(),
+        output: Vec::new()
     };
     for line in contents.lines() {
         if let Some(register) = reg_re.captures(line) {
