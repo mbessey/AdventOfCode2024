@@ -1,6 +1,154 @@
 use regex::Regex;
 
 type Number = i64;
+
+fn main() {
+    // sample();
+    // part1();
+    // part2();
+    // instruction_tests();
+    sample2();
+}
+
+fn sample() {
+    println!("Sample: ");
+    let mut program_state = file_as_program("src/sample.txt");
+    println!("Program state: {:?}", program_state);
+    while ! program_state.halted {
+        program_state.step();
+        println!("Program state: {:?}", program_state);
+    }
+    println!("Halted.");
+}
+
+fn part1() {
+    println!("PART ONE: ");
+    let mut program_state = file_as_program("src/part1.txt");
+    println!("Program state: {:?}", program_state);
+    program_state.run();
+    println!("Halted.");
+    let output_strings:Vec<String> = program_state.output.iter().map(|x|format!("{}", x)).collect();
+    println!("{}", output_strings.join(","));
+}
+
+fn sample2() {
+    println!("Sample2: ");
+    let mut program = file_as_program("src/part1.txt");
+    println!("target output: {:?}", program.instructions);
+    for a in 0..100000000 {
+        program.reset();
+        program.reg_a = a;
+        program.run();
+        if suffix_match(&program.output, &program.instructions) {
+            println!("{:o} Suffix: {:?}", a, program.output);
+        }
+    }
+    println!("Halted.");
+}
+
+fn instruction_tests() {
+    println!("Instruction tests from web:");
+    // If register C contains 9, the program 2,6 would set register B to 1.
+    let mut program = Program::new(0, 0, 9, vec![2,6]);
+    program.run();
+    assert!(program.reg_b == 1);
+    // If register A contains 10, the program 5,0,5,1,5,4 would output 0,1,2.
+    let mut program = Program::new(10, 0, 0, vec![5,0,5,1,5,4]);
+    program.run();
+    assert!(program.output == vec![0,1,2]);
+    // If register A contains 2024, the program 0,1,5,4,3,0 would output 4,2,5,6,7,7,7,7,3,1,0 and leave 0 in register A.
+    let mut program = Program::new(2024, 0, 0, vec![0,1,5,4,3,0]);
+    program.run();
+    assert!(program.output == vec![4,2,5,6,7,7,7,7,3,1,0]);
+    assert!(program.reg_a == 0);
+    // If register B contains 29, the program 1,7 would set register B to 26.
+    let mut program = Program::new(0, 29, 0, vec![1, 7]);
+    program.run();
+    assert!(program.reg_b == 26);
+    // If register B contains 2024 and register C contains 43690, the program 4,0 would set register B to 44354.
+    let mut program = Program::new(0, 2024, 43690, vec![4, 0]);
+    program.run();
+    assert!(program.reg_b == 44354);
+}
+
+fn prefix_match(output: &[Number], instructions: &[Number]) -> bool {
+    for i in 0..output.len() {
+        if output[i] != instructions[i] {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn suffix_match(output: &[Number], instructions: &[Number]) -> bool {
+    for i in 0..output.len() {
+        let start_at = instructions.len() - output.len();
+        if output[i] != instructions[start_at + i] {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn part2() {
+    println!("PART TWO: ");
+    let mut program_state = file_as_program("src/part1.txt");
+    let mut start_a = 10473000000;
+    program_state.check_output = true;
+    loop {
+        program_state.reg_a = start_a;
+        if start_a % 1000000 == 0 {
+            println!("reg_a == {}", program_state.reg_a);
+        }
+        program_state.run();
+        if program_state.output == program_state.instructions {
+            println!("Output matched with a = {}", start_a);
+            break;
+        }
+        start_a += 1;
+        program_state.reset();
+    }
+}
+
+fn file_as_program(path: &str) -> Program {
+    let contents = file_contents(path);
+    let reg_re = Regex::new(r"(Register A|Register B|Register C): ([0-9]+)")
+    .expect("Regex error");
+    let program_re = Regex::new(r"Program: ([0-9]+(,[0-9]+)*)")
+    .expect("Regex error");
+    let mut a =0;
+    let mut b= 0;
+    let mut c =0;
+    let mut i = vec![];
+    
+    for line in contents.lines() {
+        if let Some(register) = reg_re.captures(line) {
+            // println!("reg: {:?}", register);
+            let value = register[2].parse::<Number>()
+            .expect("parse error");
+            match &register[1] {
+                "Register A" => a = value,
+                "Register B" => b = value,
+                "Register C" => c = value,
+                _ => { panic!() }
+            }
+        } else if let Some(program) = program_re.captures(line) {
+            // println!("prog: {:?}", program);
+            let instructions:Vec<&str> = program[1].split(",").collect();
+            i = instructions.into_iter().map(|s| s.parse::<Number>().unwrap()).collect();
+        } else {
+            //println!("Ignoring line: {}", line);
+        }
+    }
+    return Program::new(a, b, c, i);
+}
+
+fn file_contents(path: &str) -> String {
+    use std::fs;
+    return fs::read_to_string(path)
+        .expect("should have read the file");
+}
+
 #[derive(Debug, Clone)]
 struct Program {
     reg_a: Number,
@@ -141,143 +289,4 @@ impl Program {
             // println!("Program state: {:?}", program_state);
         }
     }
-}
-
-fn main() {
-    // sample();
-    // part1();
-    // part2();
-    // instruction_tests();
-    sample2();
-}
-
-fn sample() {
-    println!("Sample: ");
-    let mut program_state = file_as_program("src/sample.txt");
-    println!("Program state: {:?}", program_state);
-    while ! program_state.halted {
-        program_state.step();
-        println!("Program state: {:?}", program_state);
-    }
-    println!("Halted.");
-}
-
-fn part1() {
-    println!("PART ONE: ");
-    let mut program_state = file_as_program("src/part1.txt");
-    println!("Program state: {:?}", program_state);
-    program_state.run();
-    println!("Halted.");
-    let output_strings:Vec<String> = program_state.output.iter().map(|x|format!("{}", x)).collect();
-    println!("{}", output_strings.join(","));
-}
-
-fn sample2() {
-    println!("Sample2: ");
-    let mut program = file_as_program("src/part1.txt");
-    println!("target output: {:?}", program.instructions);
-    for a in 0..1000 {
-        program.reset();
-        program.reg_a = a;
-        program.run();
-        if prefix_match(&program.output, &program.instructions) {
-            println!("{:o} Program output: {:?}", a, program.output);
-        } else {
-            println!("{:?}", program.output);
-        }
-    }
-    println!("Halted.");
-}
-
-fn instruction_tests() {
-    println!("Instruction tests from web:");
-    // If register C contains 9, the program 2,6 would set register B to 1.
-    let mut program = Program::new(0, 0, 9, vec![2,6]);
-    program.run();
-    assert!(program.reg_b == 1);
-    // If register A contains 10, the program 5,0,5,1,5,4 would output 0,1,2.
-    let mut program = Program::new(10, 0, 0, vec![5,0,5,1,5,4]);
-    program.run();
-    assert!(program.output == vec![0,1,2]);
-    // If register A contains 2024, the program 0,1,5,4,3,0 would output 4,2,5,6,7,7,7,7,3,1,0 and leave 0 in register A.
-    let mut program = Program::new(2024, 0, 0, vec![0,1,5,4,3,0]);
-    program.run();
-    assert!(program.output == vec![4,2,5,6,7,7,7,7,3,1,0]);
-    assert!(program.reg_a == 0);
-    // If register B contains 29, the program 1,7 would set register B to 26.
-    let mut program = Program::new(0, 29, 0, vec![1, 7]);
-    program.run();
-    assert!(program.reg_b == 26);
-    // If register B contains 2024 and register C contains 43690, the program 4,0 would set register B to 44354.
-    let mut program = Program::new(0, 2024, 43690, vec![4, 0]);
-    program.run();
-    assert!(program.reg_b == 44354);
-}
-
-fn prefix_match(output: &[Number], instructions: &[Number]) -> bool {
-    for i in 0..output.len() {
-        if output[i] != instructions[i] {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn part2() {
-    println!("PART TWO: ");
-    let mut program_state = file_as_program("src/part1.txt");
-    let mut start_a = 10473000000;
-    program_state.check_output = true;
-    loop {
-        program_state.reg_a = start_a;
-        if start_a % 1000000 == 0 {
-            println!("reg_a == {}", program_state.reg_a);
-        }
-        program_state.run();
-        if program_state.output == program_state.instructions {
-            println!("Output matched with a = {}", start_a);
-            break;
-        }
-        start_a += 1;
-        program_state.reset();
-    }
-}
-
-fn file_as_program(path: &str) -> Program {
-    let contents = file_contents(path);
-    let reg_re = Regex::new(r"(Register A|Register B|Register C): ([0-9]+)")
-    .expect("Regex error");
-    let program_re = Regex::new(r"Program: ([0-9]+(,[0-9]+)*)")
-    .expect("Regex error");
-    let mut a =0;
-    let mut b= 0;
-    let mut c =0;
-    let mut i = vec![];
-    
-    for line in contents.lines() {
-        if let Some(register) = reg_re.captures(line) {
-            // println!("reg: {:?}", register);
-            let value = register[2].parse::<Number>()
-            .expect("parse error");
-            match &register[1] {
-                "Register A" => a = value,
-                "Register B" => b = value,
-                "Register C" => c = value,
-                _ => { panic!() }
-            }
-        } else if let Some(program) = program_re.captures(line) {
-            // println!("prog: {:?}", program);
-            let instructions:Vec<&str> = program[1].split(",").collect();
-            i = instructions.into_iter().map(|s| s.parse::<Number>().unwrap()).collect();
-        } else {
-            //println!("Ignoring line: {}", line);
-        }
-    }
-    return Program::new(a, b, c, i);
-}
-
-fn file_contents(path: &str) -> String {
-    use std::fs;
-    return fs::read_to_string(path)
-        .expect("should have read the file");
 }
