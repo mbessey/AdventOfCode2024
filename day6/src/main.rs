@@ -48,33 +48,34 @@ fn sample() {
     let start = find_start(&values);
     println!("Start: ({}, {})", start.row, start.col);
     let mut facing = Direction::Up;
-    let visited = navigate_out(&mut values);
+    let (visited, steps) = navigate_out(&mut values);
     pretty_print(&values);
-    println!("Unique locations visited: {}", visited.len());
+    println!("Unique locations visited: {} steps: {}", visited.len(), steps);
 }
 
 fn part1() {
     println!("PART ONE:");
-    let mut values = file_as_vec2("src/part1.txt");
+    let mut values = file_as_vec2("src/input.txt");
     println!("Rows: {}\tColumns: {}", values.len(), values[0].len());
     // pretty_print(&values);
     let start = find_start(&values);
     println!("Start: ({}, {})", start.row, start.col);
-    let visited = navigate_out(&mut values);
-    println!("Unique locations visited: {}", visited.len());
+    let (visited, steps) = navigate_out(&mut values);
+    println!("Unique locations visited: {} steps: {}", visited.len(), steps);
 }
 
 fn part2() {
     println!("PART TWO:");
-    let map = file_as_vec2("src/part1.txt");
+    let map = file_as_vec2("src/input.txt");
     println!("Rows: {}\tColumns: {}", map.len(), map[0].len());
     // pretty_print(&values);
     let start = find_start(&map);
     println!("Start: ({}, {})", start.row, start.col);
     let mut scratch_map = map.clone();
-    let visited = navigate_out(&mut scratch_map);
-    let visited_count = visited.len();
-    println!("Unique locations visited: {}", visited_count);
+    let (visited, steps) = navigate_out(&mut scratch_map);
+    let step_count = steps;
+    println!("Steps: {}", step_count);
+    let mut places = 0;
     for coord in visited {
         if coord == start {
             continue;
@@ -84,14 +85,16 @@ fn part2() {
         let obstacle_col = coord.col;
         new_map[obstacle_row][obstacle_col] = 'O';
         // pretty_print(&new_map);
-        let visited = navigate_out(&mut new_map).len();
-        if visited != visited_count {
-            println!("Count: {}", visited);
+        let (_visited, steps) = navigate_out(&mut new_map);
+        if steps > step_count * 2 {
+            println!("Count: {}", steps);
+            places += 1;
         }
     }
+    println!("Places: {}", places)
 }
 
-fn navigate_out(v: &mut Vec<Vec<char>>) -> Vec<Coord> {
+fn navigate_out(v: &mut Vec<Vec<char>>) -> (Vec<Coord>, usize) {
     let mut steps = 0;
     let mut visited = Vec::new();
     let mut row:usize;
@@ -143,7 +146,7 @@ fn navigate_out(v: &mut Vec<Vec<char>>) -> Vec<Coord> {
             break;
         }
     }
-    return visited;
+    return (visited, steps);
 }
 
 fn find_start(v: &Vec<Vec<char>>) -> Coord {
