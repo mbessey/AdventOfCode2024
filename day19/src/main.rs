@@ -24,6 +24,7 @@ fn sample() {
     let problem = file_as_problem("src/input.txt");
     let mut count = 0;
     for pattern in &problem.patterns {
+        println!("Pattern: {}", pattern);
         let towels = matching_towels(&pattern, &problem.towels);
         println!("Pattern: {}\tTowels: {:?}", pattern, towels);
         if towels.len() > 0 { count += 1 }
@@ -61,7 +62,9 @@ struct Problem {
 
 fn matching_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
     let mut matches = vec![];
-    for towel in towels {
+    let subset = possible_towels(pattern, towels);
+    // println!("Subset: {} of {}", subset.len(), towels.len());
+    for towel in &subset {
         // if a towel matches the whole pattern, return that
         if pattern.eq(towel) {
             return vec![towel.to_string()]
@@ -69,7 +72,7 @@ fn matching_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
         // towel matches the start. See if the rest is matchable
         if pattern.starts_with(towel) {
             let rest = &pattern[towel.len()..];
-            let mut towels = matching_towels(rest, towels);
+            let mut towels = matching_towels(rest, &subset);
             // matches for the rest
             if towels.len() > 0 {
                 matches = vec![towel.to_string()];
@@ -80,3 +83,12 @@ fn matching_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
     return matches
 }
 
+fn possible_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
+    let mut possible = vec![];
+    for towel in towels {
+        if pattern.contains(towel) {
+            possible.push(towel.to_string());
+        }
+    }
+    return possible;
+}
