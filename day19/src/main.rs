@@ -3,7 +3,7 @@ use std::char::ToLowercase;
 fn main() {
     sample();
     part1();
-    part2();
+    // part2();
 }
 
 fn sample() {
@@ -12,7 +12,7 @@ fn sample() {
     println!("Towels: {:?}", &problem.towels);
     let mut count = 0;
     for pattern in &problem.patterns {
-        let towels = problem.matching_towels(&pattern);
+        let towels = matching_towels(&pattern, &problem.towels);
         println!("Pattern: {}\tTowels: {:?}", pattern, towels);
         if towels.len() > 0 { count += 1 }
     }
@@ -24,7 +24,7 @@ fn sample() {
     let problem = file_as_problem("src/input.txt");
     let mut count = 0;
     for pattern in &problem.patterns {
-        let towels = problem.matching_towels(&pattern);
+        let towels = matching_towels(&pattern, &problem.towels);
         println!("Pattern: {}\tTowels: {:?}", pattern, towels);
         if towels.len() > 0 { count += 1 }
     }
@@ -59,26 +59,24 @@ struct Problem {
     patterns: Vec<String>
 }
 
-impl Problem {
-    fn matching_towels(self: &Problem, pattern: &str) -> Vec<&str> {
-        let mut matches = vec![];
-        for towel in &self.towels {
-            // if a towel matches the whole pattern, return that
-            if pattern.eq(towel) {
-                return vec![towel]
-            }
-            // towel matches the start. See if the rest is matchable
-            if pattern.starts_with(towel) {
-                let rest = &pattern[towel.len()..];
-                let mut towels = self.matching_towels(rest);
-                // matches for the rest
-                if towels.len() > 0 {
-                    matches = vec![towel.as_str()];
-                    matches.append(&mut towels);
-                }
+fn matching_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
+    let mut matches = vec![];
+    for towel in towels {
+        // if a towel matches the whole pattern, return that
+        if pattern.eq(towel) {
+            return vec![towel.to_string()]
+        }
+        // towel matches the start. See if the rest is matchable
+        if pattern.starts_with(towel) {
+            let rest = &pattern[towel.len()..];
+            let mut towels = matching_towels(rest, towels);
+            // matches for the rest
+            if towels.len() > 0 {
+                matches = vec![towel.to_string()];
+                matches.append(&mut towels);
             }
         }
-        return matches
     }
+    return matches
 }
 
