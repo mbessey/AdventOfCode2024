@@ -15,5 +15,5 @@ Cargo.lock
 test.txt
 sample.txt
 part1.txt
-part2.txt
+input.txt
 .DS_Store
