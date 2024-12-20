@@ -1,9 +1,9 @@
-use std::char::ToLowercase;
+use memoize::memoize;
 
 fn main() {
     sample();
     part1();
-    // part2();
+    part2();
 }
 
 fn sample() {
@@ -12,8 +12,8 @@ fn sample() {
     println!("Towels: {:?}", &problem.towels);
     let mut count = 0;
     for pattern in &problem.patterns {
-        let towels = matching_towels(&pattern, &problem.towels);
-        println!("Pattern: {}\tTowels: {:?}", pattern, towels);
+        let towels = matching_towels(pattern.clone(), problem.towels.clone());
+        // println!("Pattern: {}\tTowels: {:?}", pattern, towels);
         if towels.len() > 0 { count += 1 }
     }
     println!("Count: {}", count);
@@ -24,9 +24,9 @@ fn sample() {
     let problem = file_as_problem("src/input.txt");
     let mut count = 0;
     for pattern in &problem.patterns {
-        println!("Pattern: {}", pattern);
-        let towels = matching_towels(&pattern, &problem.towels);
-        println!("Pattern: {}\tTowels: {:?}", pattern, towels);
+        // println!("Pattern: {}", pattern);
+        let towels = matching_towels(pattern.clone(), problem.towels.clone());
+        // println!("Pattern: {}\tTowels: {:?}", pattern, towels);
         if towels.len() > 0 { count += 1 }
     }
     println!("Count: {}", count);
@@ -35,6 +35,14 @@ fn sample() {
 fn part2() {
     println!("Part Two: ");
     let problem = file_as_problem("src/input.txt");
+    let mut total = 0;
+    for pattern in &problem.patterns {
+        // println!("Pattern: {}", pattern);
+        let count = count_matching_towels(pattern.clone(), problem.towels.clone());
+        // println!("Pattern: {}\tCount: {}", pattern, count);
+        total += count;
+    }
+    println!("Count: {}", total);
 }
 
 fn file_as_problem(path: &str) -> Problem {
@@ -60,19 +68,19 @@ struct Problem {
     patterns: Vec<String>
 }
 
-fn matching_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
+#[memoize]
+fn matching_towels(pattern: String, towels: Vec<String>) -> Vec<String> {
     let mut matches = vec![];
-    let subset = possible_towels(pattern, towels);
     // println!("Subset: {} of {}", subset.len(), towels.len());
-    for towel in &subset {
+    for towel in &towels {
         // if a towel matches the whole pattern, return that
         if pattern.eq(towel) {
-            return vec![towel.to_string()]
+            return vec![towel.clone()]
         }
         // towel matches the start. See if the rest is matchable
         if pattern.starts_with(towel) {
             let rest = &pattern[towel.len()..];
-            let mut towels = matching_towels(rest, &subset);
+            let mut towels = matching_towels(rest.to_string(), towels.clone());
             // matches for the rest
             if towels.len() > 0 {
                 matches = vec![towel.to_string()];
@@ -83,12 +91,22 @@ fn matching_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
     return matches
 }
 
-fn possible_towels(pattern: &str, towels: &Vec<String>) -> Vec<String> {
-    let mut possible = vec![];
-    for towel in towels {
-        if pattern.contains(towel) {
-            possible.push(towel.to_string());
+#[memoize]
+fn count_matching_towels(pattern: String, towels: Vec<String>) -> i64 {
+    let mut matches = 0;
+    // println!("Subset: {} of {}", subset.len(), towels.len());
+    for towel in &towels {
+        // if a towel matches the whole pattern, return that
+        if pattern.eq(towel) {
+            matches += 1;
+        }
+        // towel matches the start. See if the rest is matchable
+        if pattern.starts_with(towel) {
+            let rest = &pattern[towel.len()..];
+            let mut count = count_matching_towels(rest.to_string(), towels.clone());
+            // matches for the rest
+            matches += count;
         }
     }
-    return possible;
+    return matches
 }
